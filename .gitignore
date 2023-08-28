@@ -1,0 +1,77 @@
+# Ignore compiled C++ files
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.out
+*.a
+*.lib
+*.exe
+*.pdb
+*.idb
+
+# Ignore build directories
+build/
+cmake-build-*/
+Debug/
+Release/
+x64/
+x86/
+*.sln.cache
+*.suo
+*.user
+*.userosscache
+*.sync
+
+# Ignore CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# Ignore Visual Studio temporary files, build results, and project files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.vcdb
+*.opensdf
+*.sdf
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.tmp
+*.log
+*.vspscc
+
+# Ignore Python artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+__pycache__/
+*.egg-info/
+dist/
+build/
+*.egg
+*.venv
+*.swp
+.ipynb_checkpoints/
+.pytest_cache/
+*.pyc
+*.pyo
+
+# Ignore development environment files
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
