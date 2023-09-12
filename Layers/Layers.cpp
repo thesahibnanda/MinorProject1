@@ -3,113 +3,76 @@
 #include <cmath>
 #include <stdexcept>
 #include <cstdlib>
+#include <functional>
 #include <ctime>
+#include <memory>
 
-using NestedVector = std::vector<std::vector<double>>; // For 2D inputs
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-enum Activation {RELU, SIGMOID, TANH, NONE};
+using ActFunc = std::function<double(double)>;
+using NestedVector = std::vector<std::vector<double>>;
+
+enum Activation {
+    RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE
+};
 
 double relu(double x) {
     return x > 0 ? x : 0;
 }
 
-double sigmoid(double x) {
-    return 1.0 / (1.0 + std::exp(-x));
+double leaky_relu(double x, double alpha = 0.01) {
+    return x > 0 ? x : alpha * x;
+}
+
+double parametric_relu(double x, double alpha) {
+    return x > 0 ? x : alpha * x;
+}
+
+double swish(double x, double beta = 1.0) {
+    return x / (1.0 + std::exp(-beta * x));
+}
+
+double exponential(double x) {
+    return std::exp(x);
 }
 
 double tanh_act(double x) {
     return std::tanh(x);
 }
 
-// Function pointer type for activation functions
-using ActFunc = double(*)(double);
+double gelu(double x) {
+    return 0.5 * x * (1 + std::tanh(std::sqrt(2 / M_PI) * (x + 0.044715 * std::pow(x, 3))));
+}
+
+double sigmoid(double x) {
+    return 1.0 / (1.0 + std::exp(-x));
+}
 
 class Layer {
 public:
     virtual NestedVector forward(const NestedVector& inputs) = 0;
+    virtual ~Layer() {}
 };
 
 class InputLayer : public Layer {
-private:
-    NestedVector inputs;  // For 2D inputs
-    std::vector<double> inputs_1D; // For 1D inputs
-    int numInputs;
-    bool is1D; // A flag to indicate if the input is 1D or not
-
-    bool checkNestedVectorSize(const NestedVector& vec, int expectedSize) {
-        if (vec.size() != expectedSize) return false;
-        for (const auto& subVec : vec) {
-            if (subVec.size() != expectedSize) return false;
-        }
-        return true;
-    }
-
 public:
-    InputLayer(int numInputs) : numInputs(numInputs), is1D(true) {
-        inputs_1D.resize(numInputs, 0.0);
-    }
-
-    // For 1D input
-    void setInputs(const std::vector<double>& newInputs) {
-        if (newInputs.size() != numInputs) {
-            std::cerr << "Error: Mismatch in number of input neurons." << std::endl;
-            return;
-        }
-        inputs_1D = newInputs;
-        is1D = true; // set the flag to indicate it's 1D input
-    }
-
-    // For 2D input
-    void setInputs(const NestedVector& newInputs) {
-        if (!checkNestedVectorSize(newInputs, numInputs)) {
-            std::cerr << "Error: Mismatch in number of input neurons." << std::endl;
-            return;
-        }
-        inputs = newInputs;
-        is1D = false; // reset the flag to indicate it's not 1D input
-    }
-
-    void printInputs() const {
-        if (is1D) {
-            std::cout << "1D Inputs: ";
-            for (const auto& input : inputs_1D) {
-                std::cout << input << " ";
-            }
-            std::cout << std::endl;
-        } else {
-            std::cout << "2D Inputs: " << std::endl;
-            for (const auto& row : inputs) {
-                for (const auto& input : row) {
-                    std::cout << input << " ";
-                }
-                std::cout << std::endl;
-            }
-        }
-    }
-
-    // Forward method for compatibility with other layers
-    virtual NestedVector forward(const NestedVector& newInputs) override {
-        if (is1D) {
-            return {inputs_1D};
-        }
+    NestedVector forward(const NestedVector& inputs) override {
         return inputs;
     }
 };
 
-
 class DenseLayer : public Layer {
-private:
+    int inputSize;
+    int outputSize;
     NestedVector weights;
     std::vector<double> biases;
     ActFunc activation;
-    int inputSize;
-    int outputSize;
 
 public:
-    DenseLayer(int inputSize, int outputSize, Activation act = NONE) : 
-        inputSize(inputSize), outputSize(outputSize) {
-        
-        // Initialize weights and biases to random values for demonstration purposes
+    DenseLayer(int inputSize, int outputSize, Activation act = NONE, double alpha = 0.01, double beta = 1.0) : 
+    inputSize(inputSize), outputSize(outputSize) {
         std::srand(std::time(0));
         weights.resize(inputSize, std::vector<double>(outputSize));
         for(auto &row : weights) {
@@ -123,17 +86,21 @@ public:
         }
         
         switch (act) {
-            case RELU: activation = relu; break;
-            case SIGMOID: activation = sigmoid; break;
-            case TANH: activation = tanh_act; break;
-            case NONE: activation = [](double x) -> double { return x; }; break;
-            default: throw std::invalid_argument("Unsupported activation function");
+        case RELU: activation = relu; break;
+        case LEAKY_RELU: activation = [alpha](double x) { return leaky_relu(x, alpha); }; break;
+        case PARAMETRIC_RELU: activation = [alpha](double x) { return parametric_relu(x, alpha); }; break;
+        case SWISH: activation = [beta](double x) { return swish(x, beta); }; break;
+        case EXPONENTIAL: activation = exponential; break;
+        case TANH: activation = tanh_act; break;
+        case LINEAR: activation = [](double x) { return x; }; break;
+        case GELU: activation = gelu; break;
+        case SIGMOID: activation = sigmoid; break;
+        case NONE: activation = [](double x) { return x; }; break;
+        default: throw std::invalid_argument("Unsupported activation function");
         }
     }
 
     NestedVector forward(const NestedVector& inputs) override {
-        // Perform the forward computation here
-        // You can assume that 'inputs' is a 2D vector (each element is a 1D vector representing a sample)
         NestedVector output;
 
         for (const auto& sample : inputs) {
@@ -158,26 +125,23 @@ public:
 
 class Model {
 private:
-    std::vector<Layer*> layers;
+    std::vector<std::unique_ptr<Layer>> layers;
 
 public:
     void add(Layer* layer) {
-        layers.push_back(layer);
+        layers.emplace_back(layer);
     }
 
     NestedVector predict(const NestedVector& inputs) {
         NestedVector currentOutput = inputs;
-        for (Layer* layer : layers) {
+        for (const auto& layer : layers) {
             currentOutput = layer->forward(currentOutput);
         }
         return currentOutput;
     }
 };
 
-// Usage
 int main() {
-    // Same usage for InputLayer as in your code
-    InputLayer inputLayer(5);
     NestedVector sampleInputs = {
         {1, 2, 3, 4, 5},
         {5, 4, 3, 2, 1},
@@ -185,16 +149,16 @@ int main() {
     };
     
     Model model;
-    model.add(&inputLayer);
+    model.add(new InputLayer());
     model.add(new DenseLayer(5, 3, RELU));
-    model.add(new DenseLayer(3, 1, SIGMOID));
+    model.add(new DenseLayer(3, 3, SIGMOID));
+    model.add(new DenseLayer(3, 10, GELU));
+    model.add(new DenseLayer(10, 1, LEAKY_RELU));
 
-    // Assume x_test is a 2D array of test samples
     NestedVector x_test = sampleInputs;
 
     NestedVector y_pred = model.predict(x_test);
     
-    // Output y_pred
     std::cout << "Prediction Results:" << std::endl;
     for(const auto &sample : y_pred) {
         for(const auto &val : sample) {
@@ -202,5 +166,6 @@ int main() {
         }
         std::cout << std::endl;
     }
+
     return 0;
 }
