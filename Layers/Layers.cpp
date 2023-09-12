@@ -6,6 +6,10 @@
 #include <functional>
 #include <ctime>
 #include <memory>
+#include <random>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -53,38 +57,74 @@ double sigmoid(double x) {
 class Layer {
 public:
     virtual NestedVector forward(const NestedVector& inputs) = 0;
-    virtual ~Layer() {}
+    virtual ~Layer() = default;
 };
 
 class InputLayer : public Layer {
 public:
     NestedVector forward(const NestedVector& inputs) override {
-        return inputs;
+        return inputs; // Just return the input as output
     }
 };
 
 class DenseLayer : public Layer {
-    int inputSize;
-    int outputSize;
+    int inputSize, outputSize;
     NestedVector weights;
     std::vector<double> biases;
     ActFunc activation;
 
 public:
-    DenseLayer(int inputSize, int outputSize, Activation act = NONE, double alpha = 0.01, double beta = 1.0) : 
-    inputSize(inputSize), outputSize(outputSize) {
-        std::srand(std::time(0));
-        weights.resize(inputSize, std::vector<double>(outputSize));
-        for(auto &row : weights) {
-            for(auto &w : row) {
-                w = ((double) rand() / (RAND_MAX)) - 0.5;
-            }
-        }
-        biases.resize(outputSize);
-        for(auto &b : biases) {
-            b = ((double) rand() / (RAND_MAX)) - 0.5;
-        }
+    enum WeightInit {
+        RANDOM, ZERO, XAVIER, HE, MANUAL
+    };
+
+    DenseLayer(int inputSize, int outputSize, Activation act = NONE, WeightInit init = RANDOM, 
+               double alpha = 0.01, double beta = 1.0, const NestedVector& weightData = {}, const std::vector<double>& biasData = {}) : 
+    inputSize(inputSize), outputSize(outputSize), weights(inputSize, std::vector<double>(outputSize)), biases(outputSize) {
+
+        std::default_random_engine generator(std::time(0));
         
+        if (init == RANDOM) {
+            std::uniform_real_distribution<double> distribution(-0.5, 0.5);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == ZERO) {
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = 0.0;
+            for(auto &b : biases)
+                b = 0.0;
+        }
+        else if (init == XAVIER) {
+            double var = std::sqrt(2.0 / (inputSize + outputSize));
+            std::normal_distribution<double> distribution(0.0, var);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == HE) {
+            double var = std::sqrt(2.0 / inputSize);
+            std::normal_distribution<double> distribution(0.0, var);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == MANUAL) {
+            if (weightData.size() != inputSize || weightData[0].size() != outputSize || biasData.size() != outputSize) {
+                throw std::invalid_argument("Weight and bias data dimensions do not match layer dimensions");
+            }
+            weights = weightData;
+            biases = biasData;
+        }
+
         switch (act) {
         case RELU: activation = relu; break;
         case LEAKY_RELU: activation = [alpha](double x) { return leaky_relu(x, alpha); }; break;
@@ -145,16 +185,23 @@ int main() {
     NestedVector sampleInputs = {
         {1, 2, 3, 4, 5},
         {5, 4, 3, 2, 1},
-        {4, 6, 8, 8, 9},
-        {1, 4, 4, 5, 6}
+        {4, 6, 8, 8, 9}
     };
+    
+    NestedVector manualWeights = {
+        {0.1, 0.2, 0.3},
+        {0.4, 0.5, 0.6},
+        {0.7, 0.8, 0.9}
+    };
+    std::vector<double> manualBiases = {0.01, 0.01, 0};
     
     Model model;
     model.add(new InputLayer());
-    model.add(new DenseLayer(5, 3, RELU));
-    model.add(new DenseLayer(3, 3, SIGMOID));
-    model.add(new DenseLayer(3, 10, GELU));
-    model.add(new DenseLayer(10, 1, LEAKY_RELU));
+    model.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER)); // Xavier initialization
+    model.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
+    model.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
+    model.add(new DenseLayer(5, 1, SIGMOID, DenseLayer::RANDOM)); // Random
+// Manual initialization
 
     NestedVector x_test = sampleInputs;
 
