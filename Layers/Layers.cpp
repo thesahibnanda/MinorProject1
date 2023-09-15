@@ -75,11 +75,12 @@ class DenseLayer : public Layer {
 
 public:
     enum WeightInit {
-        RANDOM, ZERO, XAVIER, HE, MANUAL
+    RANDOM, ZERO, XAVIER_UNIFORM, XAVIER, HE_UNIFORM, HE, LECUN_NORMAL, LECUN_UNIFORM, MANUAL
     };
 
+
     DenseLayer(int inputSize, int outputSize, Activation act = NONE, WeightInit init = RANDOM, 
-               double alpha = 0.01, double beta = 1.0, const NestedVector& weightData = {}, const std::vector<double>& biasData = {}) : 
+           double alpha = 0.01, double beta = 1.0, const NestedVector& weightData = {}, const std::vector<double>& biasData = {}) : 
     inputSize(inputSize), outputSize(outputSize), weights(inputSize, std::vector<double>(outputSize)), biases(outputSize) {
 
         std::default_random_engine generator(std::time(0));
@@ -123,6 +124,43 @@ public:
             }
             weights = weightData;
             biases = biasData;
+        }
+
+        else if (init == XAVIER_UNIFORM) {
+            double limit = std::sqrt(6.0 / (inputSize + outputSize));
+            std::uniform_real_distribution<double> distribution(-limit, limit);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == HE_UNIFORM) {
+            double limit = std::sqrt(6.0 / inputSize);
+            std::uniform_real_distribution<double> distribution(-limit, limit);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == LECUN_NORMAL) {
+            double std_dev = std::sqrt(1.0 / inputSize);
+            std::normal_distribution<double> distribution(0.0, std_dev);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
+        }
+        else if (init == LECUN_UNIFORM) {
+            double limit = std::sqrt(3.0 / inputSize);
+            std::uniform_real_distribution<double> distribution(-limit, limit);
+            for(auto &row : weights)
+                for(auto &w : row)
+                    w = distribution(generator);
+            for(auto &b : biases)
+                b = distribution(generator);
         }
 
         switch (act) {
@@ -197,10 +235,11 @@ int main() {
     
     Model model;
     model.add(new InputLayer());
-    model.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER)); // Xavier initialization
+    model.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
     model.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
     model.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
-    model.add(new DenseLayer(5, 1, SIGMOID, DenseLayer::RANDOM)); // Random
+    model.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
+    model.add(new DenseLayer(2, 1, SIGMOID, DenseLayer::HE_UNIFORM));
 // Manual initialization
 
     NestedVector x_test = sampleInputs;
