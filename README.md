@@ -13,4 +13,4 @@
 6. Write **Pruning** Algorithms
 7. Create **Training** And **Testing** Functions With Automating Iterations
 
-**Note:** Do All This With Dynamic Memory Allocation.
+**Note:** Do All This With Dynamic Memory Allocation
