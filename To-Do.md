@@ -6,7 +6,7 @@
 ### **Tasks At Hand** 
 
 1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: `Null`) 
-<small><span style="color:red;">High Priority</span></small>
+<small><p style="color:red;">High Priority</p></small>
 
 2. Adding `Softmax` To Activation Function's Functionality (Assigned: `Null`)
 
