@@ -3,6 +3,8 @@
 #### Mentor: Dr. Kingshuk Srivastava
 #### Members: Sahib Nanda, Kunal Vasisht, Ananya Bundela, Akshiti Agarwal
 
+### Licence: [MIT](LICENSE)
+
 ## **Steps For Coding (Only Developing Part)**
 
 1. Create **Input Layer** Code
