@@ -8,7 +8,7 @@
 1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: `Null`) 
 <small><span style="color:red;">High Priority</span></small>
 
-2. Adding `Softmax` To Activation Function's Functionality (Assigned: `Null`)
+2. Adding `Softmax`, `Square`, `Sqrt`, & `Cube` To Activation Function's Functionality (Assigned: `Null`)
 
 3. Adding `Ones` To Weight Initializing Algorithms (Assigned: `Null`)
 
