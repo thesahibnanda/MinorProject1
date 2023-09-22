@@ -1,11 +1,16 @@
-# **Minor Project 1**
+# <center>**|| जय श्री राम ||**</center>
+
+<br>
+
+## **Minor Project 1**
 
 #### Mentor: Dr. Kingshuk Srivastava
 #### Members: Sahib Nanda, Kunal Vasisht, Ananya Bundela, Akshiti Agarwal
 
 ### Licence: [MIT](LICENSE)
 
-## **Steps For Coding (Only Developing Part)**
+
+<!-- ## **Steps For Coding (Only Developing Part)**
 
 1. Create **Input Layer** Code
 2. Create **Dense Layer** Code With Different Activation Functions
@@ -15,4 +20,4 @@
 6. Write **Pruning** Algorithms
 7. Create **Training** And **Testing** Functions With Automating Iterations
 
-**Note:** Do All This With Dynamic Memory Allocation.
+**Note:** Do All This With Dynamic Memory Allocation. -->
