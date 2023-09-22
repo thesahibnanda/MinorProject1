@@ -19,7 +19,7 @@ using ActFunc = std::function<double(double)>;
 using NestedVector = std::vector<std::vector<double>>;
 
 enum Activation {
-    RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE
+    RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE, SQUARE, SQUARE_ROOT, CUBIC
 };
 
 double relu(double x) {
@@ -52,6 +52,21 @@ double gelu(double x) {
 
 double sigmoid(double x) {
     return 1.0 / (1.0 + std::exp(-x));
+}
+
+double square(double x) {
+    return x * x;
+}
+
+double square_root(double x) {
+    if (x < 0) {
+        return 0; // Square root of negative numbers is undefined in real numbers
+    }
+    return std::sqrt(x);
+}
+
+double cubic(double x) {
+    return x * x * x;
 }
 
 class Layer {
@@ -174,6 +189,9 @@ public:
         case GELU: activation = gelu; break;
         case SIGMOID: activation = sigmoid; break;
         case NONE: activation = [](double x) { return x; }; break;
+        case SQUARE: activation = square; break; // Add SQUARE activation
+        case SQUARE_ROOT: activation = square_root; break; // Add SQUARE_ROOT activation
+        case CUBIC: activation = cubic; break; // Add CUBIC activation
         default: throw std::invalid_argument("Unsupported activation function");
         }
     }
@@ -239,7 +257,11 @@ int main() {
     model.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
     model.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
     model.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
-    model.add(new DenseLayer(2, 1, SIGMOID, DenseLayer::HE_UNIFORM));
+    model.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
+    model.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
+    model.add(new DenseLayer(2, 1, CUBIC, DenseLayer::LECUN_UNIFORM));
+    model.add(new DenseLayer(1, 1, SQUARE_ROOT, DenseLayer::XAVIER));
+    model.add(new DenseLayer(1, 1, SIGMOID, DenseLayer::RANDOM));
 // Manual initialization
 
     NestedVector x_test = sampleInputs;
