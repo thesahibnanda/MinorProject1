@@ -5,7 +5,7 @@
 
 ### **Tasks At Hand** 
 
-1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: `Null`) 
+1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: Akshiti) 
 <small>High Priority</small>
 
 2. Adding `Softmax` To Activation Function's Functionality (Assigned: Ananya )
