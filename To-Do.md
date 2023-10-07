@@ -6,11 +6,11 @@
 ### **Tasks At Hand** 
 
 1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: _`Akshiti Agarwal`_) 
-<small>High Priority</small>
+<sub><sup>High Priority</sup></sub>
 
 2. Adding `Softmax` To Activation Function's Functionality (Assigned: _`Ananya Bundela`_)
 
-    3. Adding `Ones` To Weight Initializing Algorithms (Assigned: _`Kunal Vasisht`_)
+3. Adding `Ones` To Weight Initializing Algorithms (Assigned: _`Kunal Vasisht`_)
 
 ### **Tasks To Completed In Near Future**
 
