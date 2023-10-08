@@ -6,7 +6,7 @@
 ### **Tasks At Hand** 
 
 1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: _`Akshiti Agarwal`_) 
-<sub><sup>High Priority</sup></sub>
+<sub><sup><font color="red">High Priority</font></sup></sub>
 
 2. Adding `Softmax` To Activation Function's Functionality (Assigned: _`Ananya Bundela`_)
 
@@ -20,8 +20,8 @@
 
 3. Implement Optimizing Algorithms And Metrics
 
-4. Epoch And Learning Rate Automation (<span style="color:green;">USP of the Project</span>)
+4. Epoch And Learning Rate Automation (<font color="green">USP of the Project</font>)
 
 5. Addition Of Other Weight Initializer Algorithms
 
-6. Visualization (<span style="color:yellow;">Time Dependent</span>)
+6. Visualization (<font color="yellow">Time Dependent</font>)

@@ -9,6 +9,9 @@
 
 ### Licence: [MIT](LICENSE)
 
+#### To-Do For Contributors: [To-Do](To-Do.md)
+
+
 
 <!-- ## **Steps For Coding (Only Developing Part)**
 
