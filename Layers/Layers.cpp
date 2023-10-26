@@ -19,7 +19,7 @@ using ActFunc = std::function<double(double)>;
 using NestedVector = std::vector<std::vector<double>>;
 
 enum Activation {
-    RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE, SQUARE, SQUARE_ROOT, CUBIC
+    RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE, SQUARE, SQUARE_ROOT, CUBIC,SOFTMAX
 };
 
 double relu(double x) {
@@ -67,6 +67,9 @@ double square_root(double x) {
 
 double cubic(double x) {
     return x * x * x;
+}
+double softmax(double x){//*ANANYA*-Softmax
+return std::exp(x) / (1 + std::exp(x));
 }
 
 class Layer {
@@ -192,6 +195,7 @@ public:
         case SQUARE: activation = square; break; // Add SQUARE activation
         case SQUARE_ROOT: activation = square_root; break; // Add SQUARE_ROOT activation
         case CUBIC: activation = cubic; break; // Add CUBIC activation
+        case SOFTMAX:activation= softmax;break;//*ANANYA*-Softmax
         default: throw std::invalid_argument("Unsupported activation function");
         }
     }
