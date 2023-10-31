@@ -3,12 +3,9 @@
 
 <br>
 
-### **Tasks At Hand** 
+### **Due Tasks** 
 
-1. Creating Functionality For Input Layer Which Lets It Accept 1-D & n-D Inputs (Assigned: _`Akshiti Agarwal`_) 
-<sub><sup><font color="red">High Priority</font></sup></sub>
-
-2. Adding `Ones` To Weight Initializing Algorithms (Assigned: _`Kunal Vasisht`_)
+1. Adding `Ones` To Weight Initializing Algorithms (Assigned: _`Kunal Vasisht`_)
 
 ### **Tasks To Completed In Near Future**
 
