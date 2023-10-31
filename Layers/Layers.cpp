@@ -99,7 +99,6 @@ public:
         return output;
     }
 };
-// **AKSHITI AGARWAL** 
 // END
 
 class DenseLayer : public Layer {
