@@ -83,12 +83,24 @@ public:
     virtual ~Layer() = default;
 };
 
+// **AKSHITI AGARWAL** 1D & 2D Inputs
+// START
 class InputLayer : public Layer {
 public:
     NestedVector forward(const NestedVector& inputs) override {
-        return inputs; // Just return the input as output
+        NestedVector output;
+        for (const auto& sample : inputs) {
+            std::vector<double> outputSample;
+            for (double value : sample) {
+                outputSample.push_back(value);
+            }
+            output.push_back(outputSample);
+        }
+        return output;
     }
 };
+// **AKSHITI AGARWAL** 
+// END
 
 class DenseLayer : public Layer {
     int inputSize, outputSize;
@@ -247,7 +259,8 @@ public:
 };
 
 int main() {
-    NestedVector sampleInputs = {
+    // 2D Inputs Test Case
+    NestedVector sampleInputs2D = {
         {1, 2, 3, 4, 5},
         {5, 4, 3, 2, 1},
         {4, 6, 8, 8, 9}
@@ -259,31 +272,60 @@ int main() {
         {0.7, 0.8, 0.9}
     };
     std::vector<double> manualBiases = {0.01, 0.01, 0};
-    
-    Model model;
-    model.add(new InputLayer());
-    model.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
-    model.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
-    model.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
-    model.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
-    model.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
-    model.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
-    model.add(new DenseLayer(2, 11, CUBIC, DenseLayer::LECUN_UNIFORM));
-    model.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
-    model.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::RANDOM)); // Softmax
-// Manual initialization
 
-    NestedVector x_test = sampleInputs;
+    Model model2D;
+    model2D.add(new InputLayer());
+    model2D.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
+    model2D.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
+    model2D.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
+    model2D.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
+    model2D.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
+    model2D.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
+    model2D.add(new DenseLayer(2, 11, TANH, DenseLayer::LECUN_UNIFORM));
+    model2D.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
+    model2D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::RANDOM)); // Softmax
 
-    NestedVector y_pred = model.predict(x_test);
+    NestedVector x_test_2d = sampleInputs2D;
+
+    NestedVector y_pred_2d = model2D.predict(x_test_2d);
     
-    std::cout << "Prediction Results:" << std::endl;
-    for(const auto &sample : y_pred) {
+    std::cout << "Prediction Results for 2D Input:" << std::endl;
+    for(const auto &sample : y_pred_2d) {
         for(const auto &val : sample) {
             std::cout << val << " ";
         }
         std::cout << std::endl;
     }
+
+    // **AKSHITI AGARWAL**
+    // Test Case For 1D Inputs
+    // START
+    std::vector<double> sampleInputs1D = {1, 2, 3, 4, 5};  // 1D input
+
+    Model model1D;
+    model1D.add(new InputLayer());
+    model1D.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
+    model1D.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
+    model1D.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
+    model1D.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
+    model1D.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
+    model1D.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
+    model1D.add(new DenseLayer(2, 11, CUBIC, DenseLayer::LECUN_UNIFORM));
+    model1D.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
+    model1D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::RANDOM)); // Softmax
+
+    NestedVector x_test_1d = {sampleInputs1D};  // Convert 1D input to 2D
+
+    NestedVector y_pred_1d = model1D.predict(x_test_1d);
+    
+    std::cout << "Prediction Results for 1D Input:" << std::endl;
+    for(const auto &sample : y_pred_1d) {
+        for(const auto &val : sample) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+    // END
 
     return 0;
 }
