@@ -109,7 +109,7 @@ class DenseLayer : public Layer {
 
 public:
     enum WeightInit {
-    RANDOM, ZERO, XAVIER_UNIFORM, XAVIER, HE_UNIFORM, HE, LECUN_NORMAL, LECUN_UNIFORM, MANUAL
+    RANDOM, ZERO, XAVIER_UNIFORM, XAVIER, HE_UNIFORM, HE, LECUN_NORMAL, LECUN_UNIFORM, MANUAL, ONES
     };
 
 
@@ -143,6 +143,16 @@ public:
             for(auto &b : biases)
                 b = distribution(generator);
         }
+        // **KUNAL VASISHT** Added ONES weight initialization algorithm
+        // START
+        else if (init == ONES) {
+            for (auto &row : weights)
+                for (auto &w : row)
+                 w = 1.0;
+            for (auto &b : biases)
+                b = 1.0;
+        }
+        // END 
         else if (init == HE) {
             double var = std::sqrt(2.0 / inputSize);
             std::normal_distribution<double> distribution(0.0, var);
@@ -282,7 +292,7 @@ int main() {
     model2D.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
     model2D.add(new DenseLayer(2, 11, TANH, DenseLayer::LECUN_UNIFORM));
     model2D.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
-    model2D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::RANDOM)); // Softmax
+    model2D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::ONES)); // Softmax
 
     NestedVector x_test_2d = sampleInputs2D;
 
