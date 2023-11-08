@@ -5,7 +5,9 @@
 
 ### **Due Tasks** 
 
-1. Adding `Ones` To Weight Initializing Algorithms (Assigned: _`Kunal Vasisht`_)
+```py
+None
+```
 
 ### **Tasks To Completed In Near Future**
 
