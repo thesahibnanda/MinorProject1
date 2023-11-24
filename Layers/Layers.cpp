@@ -18,7 +18,7 @@
 using ActFunc = std::function<double(double)>;
 using NestedVector = std::vector<std::vector<double>>;
 
-//**ANANYA BUNDELA** Added Softmax In enum Activation
+
 enum Activation {
     RELU, LEAKY_RELU, PARAMETRIC_RELU, SWISH, EXPONENTIAL, TANH, LINEAR, GELU, SIGMOID, NONE, SQUARE, SQUARE_ROOT, CUBIC, SOFTMAX
 };
@@ -70,12 +70,12 @@ double cubic(double x) {
     return x * x * x;
 }
 
-// **ANANYA BUNDELA** Softmax
-//START
+
+
 double softmax(double x) {
     return std::exp(x) / (1.0 + std::exp(x));
 }
-//END
+
 
 class Layer {
 public:
@@ -83,8 +83,8 @@ public:
     virtual ~Layer() = default;
 };
 
-// **AKSHITI AGARWAL** 1D & 2D Inputs
-// START
+// 1D & 2D Inputs
+
 class InputLayer : public Layer {
 public:
     NestedVector forward(const NestedVector& inputs) override {
@@ -99,7 +99,7 @@ public:
         return output;
     }
 };
-// END
+
 
 class DenseLayer : public Layer {
     int inputSize, outputSize;
@@ -143,8 +143,8 @@ public:
             for(auto &b : biases)
                 b = distribution(generator);
         }
-        // **KUNAL VASISHT** Added ONES weight initialization algorithm
-        // START
+        
+   
         else if (init == ONES) {
             for (auto &row : weights)
                 for (auto &w : row)
@@ -152,7 +152,7 @@ public:
             for (auto &b : biases)
                 b = 1.0;
         }
-        // END 
+
         else if (init == HE) {
             double var = std::sqrt(2.0 / inputSize);
             std::normal_distribution<double> distribution(0.0, var);
@@ -221,7 +221,7 @@ public:
         case SQUARE: activation = square; break; // Add SQUARE activation
         case SQUARE_ROOT: activation = square_root; break; // Add SQUARE_ROOT activation
         case CUBIC: activation = cubic; break; // Add CUBIC activation
-        case SOFTMAX:activation= softmax;break;//**ANANYA BUNDELA** Added Softmax
+        case SOFTMAX:activation= softmax;break;
         default: throw std::invalid_argument("Unsupported activation function");
         }
     }
@@ -306,9 +306,9 @@ int main() {
         std::cout << std::endl;
     }
 
-    // **AKSHITI AGARWAL**
+
     // Test Case For 1D Inputs
-    // START
+
     std::vector<double> sampleInputs1D = {1, 2, 3, 4, 5};  // 1D input
 
     Model model1D;
@@ -334,7 +334,7 @@ int main() {
         }
         std::cout << std::endl;
     }
-    // END
+
 
     return 0;
 }
