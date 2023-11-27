@@ -7,6 +7,7 @@
 #include <ctime>
 #include <memory>
 #include <random>
+#include <algorithm> 
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -80,6 +81,7 @@ double softmax(double x) {
 class Layer {
 public:
     virtual NestedVector forward(const NestedVector& inputs) = 0;
+    virtual NestedVector backward(const NestedVector& gradients, double learning_rate) = 0; // Added 'backward' function
     virtual ~Layer() = default;
 };
 
@@ -97,6 +99,12 @@ public:
             output.push_back(outputSample);
         }
         return output;
+    }
+
+    NestedVector backward(const NestedVector& gradients, double learning_rate) override {
+        // You can leave this function empty for InputLayer since it's not involved in backpropagation
+        NestedVector grad_input;
+        return grad_input;
     }
 };
 
@@ -247,6 +255,36 @@ public:
 
         return output;
     }
+
+    NestedVector backward(const NestedVector& gradients, double learning_rate) override {
+    NestedVector grad_input;
+    grad_input.reserve(gradients.size());
+
+    for (int i = 0; i < gradients.size(); ++i) {
+        std::vector<double> grad_input_sample(inputSize, 0.0);
+
+        for (int j = 0; j < inputSize; ++j) {
+            for (int k = 0; k < outputSize; ++k) {
+                grad_input_sample[j] += gradients[i][k] * weights[j][k];
+                // Update weights here using the inputs (not shown in this snippet)
+            }
+        }
+
+        grad_input.push_back(grad_input_sample);
+    }
+
+    // Update biases using gradients and learning_rate
+    for (int j = 0; j < outputSize; ++j) {
+        double bias_grad = 0.0;
+        for (int k = 0; k < gradients.size(); ++k) {
+            bias_grad += gradients[k][j];
+        }
+        biases[j] -= learning_rate * bias_grad;
+    }
+
+    return grad_input;
+}
+
 };
 
 class Model {
@@ -265,76 +303,157 @@ public:
         }
         return currentOutput;
     }
+
+    void fit(const NestedVector& x_train, const NestedVector& y_train, int epochs, double learning_rate) {
+        int num_samples = x_train.size();
+
+        for (int epoch = 0; epoch < epochs; ++epoch) {
+            double total_loss = 0.0;
+
+            // Shuffle training data for better convergence
+            std::vector<int> indices(num_samples);
+            for (int i = 0; i < num_samples; ++i) {
+                indices[i] = i;
+            }
+            std::shuffle(indices.begin(), indices.end(), std::default_random_engine(std::time(0)));
+
+            for (int i = 0; i < num_samples; ++i) {
+                int index = indices[i];
+                NestedVector input_sample = {x_train[index]};
+                NestedVector target_sample = {y_train[index]};
+
+                // Forward pass
+                NestedVector output = predict(input_sample);
+
+                // Calculate loss (mean squared error for regression)
+                double loss = 0.0;
+                for (int j = 0; j < output[0].size(); ++j) {
+                    loss += 0.5 * std::pow(target_sample[0][j] - output[0][j], 2);
+                }
+                total_loss += loss;
+
+                // Backpropagation
+                NestedVector grad = target_sample;
+                for (int j = 0; j < output[0].size(); ++j) {
+                    grad[0][j] = output[0][j] - grad[0][j];
+                }
+
+                for (int l = layers.size() - 1; l >= 0; --l) {
+                    grad = layers[l]->backward(grad, learning_rate);
+                }
+            }
+
+            // Print loss for this epoch
+            std::cout << "Epoch " << epoch + 1 << ", Loss: " << total_loss / num_samples << std::endl;
+        }
+    }
+
+    // std::vector<int> predict_classes(const NestedVector& inputs) {
+    //     NestedVector probabilities = predict(inputs);
+
+    //     // Initialize a vector to store predicted class labels
+    //     std::vector<int> predicted_labels;
+    //     predicted_labels.reserve(probabilities.size());
+
+    //     for (const auto& sample : probabilities) {
+    //         int predicted_class = -1;
+    //         double max_prob = 0.0;
+
+    //         // Find the class with the highest probability
+    //         for (int i = 0; i < sample.size(); ++i) {
+    //             if (sample[i] > max_prob) {
+    //                 max_prob = sample[i];
+    //                 predicted_class = i;
+    //             }
+    //         }
+
+    //         // Add the predicted class label to the result
+    //         predicted_labels.push_back(predicted_class);
+    //     }
+
+    //     return predicted_labels;
+    // }
 };
 
-int main() {
-    // 2D Inputs Test Case
-    NestedVector sampleInputs2D = {
-        {1, 2, 3, 4, 5},
-        {5, 4, 3, 2, 1},
-        {4, 6, 8, 8, 9}
+double calculate_accuracy(const std::vector<int>& predicted_labels, const std::vector<int>& true_labels) {
+    if (predicted_labels.size() != true_labels.size()) {
+        throw std::invalid_argument("Input vectors must have the same size");
+    }
+
+    int correct_count = 0;
+    int total_count = predicted_labels.size();
+
+    for (size_t i = 0; i < total_count; ++i) {
+        if (predicted_labels[i] == true_labels[i]) {
+            correct_count++;
+        }
+    }
+
+    return static_cast<double>(correct_count) / total_count;
+}
+
+double calculate_rmse(const NestedVector& predicted_values, const NestedVector& true_values) {
+    if (predicted_values.size() != true_values.size()) {
+        throw std::invalid_argument("Input vectors must have the same size");
+    }
+
+    double sum_squared_error = 0.0;
+    int total_count = predicted_values.size();
+
+    for (size_t i = 0; i < total_count; ++i) {
+        for (size_t j = 0; j < predicted_values[i].size(); ++j) {
+            double error = predicted_values[i][j] - true_values[i][j];
+            sum_squared_error += error * error;
+        }
+    }
+
+    double mean_squared_error = sum_squared_error / total_count;
+    double rmse = std::sqrt(mean_squared_error);
+
+    return rmse;
+}
+
+
+int main() 
+{
+    NestedVector x_train_regression = {
+        {1.0, 2.0, 3.0},
+        {2.0, 3.0, 4.0},
+        {3.0, 4.0, 5.0},
+        {4.0, 5.0, 6.0},
+        {5.0, 6.0, 7.0}
     };
-    
-    NestedVector manualWeights = {
-        {0.1, 0.2, 0.3},
-        {0.4, 0.5, 0.6},
-        {0.7, 0.8, 0.9}
+
+    NestedVector y_train_regression = {
+        {4.0},
+        {7.0},
+        {10.0},
+        {13.0},
+        {16.0}
     };
-    std::vector<double> manualBiases = {0.01, 0.01, 0};
 
-    Model model2D;
-    model2D.add(new InputLayer());
-    model2D.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
-    model2D.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
-    model2D.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
-    model2D.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
-    model2D.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
-    model2D.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
-    model2D.add(new DenseLayer(2, 11, TANH, DenseLayer::LECUN_UNIFORM));
-    model2D.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
-    model2D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::ONES)); // Softmax
+    Model regression_model;
+    regression_model.add(new InputLayer());
+    regression_model.add(new DenseLayer(3, 5, RELU, DenseLayer::XAVIER_UNIFORM));
+    regression_model.add(new DenseLayer(5, 1, LINEAR, DenseLayer::XAVIER_UNIFORM));
 
-    NestedVector x_test_2d = sampleInputs2D;
+    // Train the model on regression problem
+    regression_model.fit(x_train_regression, y_train_regression, 1000, 0.01);
 
-    NestedVector y_pred_2d = model2D.predict(x_test_2d);
-    
-    std::cout << "Prediction Results for 2D Input:" << std::endl;
-    for(const auto &sample : y_pred_2d) {
+    // Test Case 2: Calculate RMSE for Regression
+    NestedVector x_test_regression = x_train_regression;
+    NestedVector predicted_values_regression = regression_model.predict(x_test_regression);
+
+    for(const auto &sample : predicted_values_regression) {
         for(const auto &val : sample) {
             std::cout << val << " ";
         }
         std::cout << std::endl;
     }
 
+    double rmse_regression = calculate_rmse(predicted_values_regression, y_train_regression);
 
-    // Test Case For 1D Inputs
-
-    std::vector<double> sampleInputs1D = {1, 2, 3, 4, 5};  // 1D input
-
-    Model model1D;
-    model1D.add(new InputLayer());
-    model1D.add(new DenseLayer(5, 3, RELU, DenseLayer::XAVIER_UNIFORM)); // Xavier initialization
-    model1D.add(new DenseLayer(3, 3, TANH, DenseLayer::MANUAL, 0.01, 1.0, manualWeights, manualBiases)); // Manual initialization
-    model1D.add(new DenseLayer(3, 5, TANH, DenseLayer::RANDOM)); // Random
-    model1D.add(new DenseLayer(5, 2, SIGMOID, DenseLayer::HE));
-    model1D.add(new DenseLayer(2, 10, SIGMOID, DenseLayer::HE_UNIFORM));
-    model1D.add(new DenseLayer(10, 2, SQUARE, DenseLayer::LECUN_NORMAL));
-    model1D.add(new DenseLayer(2, 11, CUBIC, DenseLayer::LECUN_UNIFORM));
-    model1D.add(new DenseLayer(11, 12, SQUARE_ROOT, DenseLayer::XAVIER));
-    model1D.add(new DenseLayer(12, 1, SOFTMAX, DenseLayer::RANDOM)); // Softmax
-
-    NestedVector x_test_1d = {sampleInputs1D};  // Convert 1D input to 2D
-
-    NestedVector y_pred_1d = model1D.predict(x_test_1d);
-    
-    std::cout << "Prediction Results for 1D Input:" << std::endl;
-    for(const auto &sample : y_pred_1d) {
-        for(const auto &val : sample) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-
+    std::cout << "RMSE for Regression: " << rmse_regression << std::endl;
 
     return 0;
 }
