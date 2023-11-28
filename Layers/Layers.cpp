@@ -350,11 +350,44 @@ public:
             std::cout << "Epoch " << epoch + 1 << ", Loss: " << total_loss / num_samples << std::endl;
         }
     }
+
+    std::vector<int> binary_predict_class(const NestedVector& inputs) {
+        NestedVector outputs = predict(inputs); // Use the existing predict method
+        std::vector<int> classes(outputs.size());
+
+        for (int i = 0; i < outputs.size(); ++i) {
+            // Assuming binary classification and outputs are probabilities
+            classes[i] = outputs[i][0] >= 0.5 ? 1 : 0;
+        }
+
+        return classes;
+    }
+
+    std::vector<int> multi_predict_class(const NestedVector& inputs) {
+        NestedVector outputs = predict(inputs); // Use the existing predict method
+        std::vector<int> classes(outputs.size());
+
+        for (int i = 0; i < outputs.size(); ++i) {
+            int classIndex = 0;
+            double maxOutput = outputs[i][0];
+
+            for (int j = 1; j < outputs[i].size(); ++j) {
+                if (outputs[i][j] > maxOutput) {
+                    maxOutput = outputs[i][j];
+                    classIndex = j;
+                }
+            }
+
+            classes[i] = classIndex;
+        }
+
+        return classes;
+    }
 };
 
 
 
-int main() 
+int main()
 {
     return 0;
 }
