@@ -257,33 +257,36 @@ public:
     }
 
     NestedVector backward(const NestedVector& gradients, double learning_rate) override {
-    NestedVector grad_input;
-    grad_input.reserve(gradients.size());
+        NestedVector grad_input;
+        grad_input.reserve(gradients.size());
 
-    for (int i = 0; i < gradients.size(); ++i) {
-        std::vector<double> grad_input_sample(inputSize, 0.0);
+        for (int i = 0; i < gradients.size(); ++i) {
+            std::vector<double> grad_input_sample(inputSize, 0.0);
 
-        for (int j = 0; j < inputSize; ++j) {
-            for (int k = 0; k < outputSize; ++k) {
-                grad_input_sample[j] += gradients[i][k] * weights[j][k];
-                // Update weights here using the inputs (not shown in this snippet)
+            for (int j = 0; j < inputSize; ++j) {
+                for (int k = 0; k < outputSize; ++k) {
+                    grad_input_sample[j] += gradients[i][k] * weights[j][k];
+
+                    // Update weights here
+                    weights[j][k] -= learning_rate * gradients[i][k]; // Adding this line updates the weights
+                }
             }
+
+            grad_input.push_back(grad_input_sample);
         }
 
-        grad_input.push_back(grad_input_sample);
-    }
-
-    // Update biases using gradients and learning_rate
-    for (int j = 0; j < outputSize; ++j) {
-        double bias_grad = 0.0;
-        for (int k = 0; k < gradients.size(); ++k) {
-            bias_grad += gradients[k][j];
+        // Update biases using gradients and learning_rate
+        for (int j = 0; j < outputSize; ++j) {
+            double bias_grad = 0.0;
+            for (int k = 0; k < gradients.size(); ++k) {
+                bias_grad += gradients[k][j];
+            }
+            biases[j] -= learning_rate * bias_grad;
         }
-        biases[j] -= learning_rate * bias_grad;
+
+        return grad_input;
     }
 
-    return grad_input;
-}
 
 };
 
@@ -347,113 +350,11 @@ public:
             std::cout << "Epoch " << epoch + 1 << ", Loss: " << total_loss / num_samples << std::endl;
         }
     }
-
-    // std::vector<int> predict_classes(const NestedVector& inputs) {
-    //     NestedVector probabilities = predict(inputs);
-
-    //     // Initialize a vector to store predicted class labels
-    //     std::vector<int> predicted_labels;
-    //     predicted_labels.reserve(probabilities.size());
-
-    //     for (const auto& sample : probabilities) {
-    //         int predicted_class = -1;
-    //         double max_prob = 0.0;
-
-    //         // Find the class with the highest probability
-    //         for (int i = 0; i < sample.size(); ++i) {
-    //             if (sample[i] > max_prob) {
-    //                 max_prob = sample[i];
-    //                 predicted_class = i;
-    //             }
-    //         }
-
-    //         // Add the predicted class label to the result
-    //         predicted_labels.push_back(predicted_class);
-    //     }
-
-    //     return predicted_labels;
-    // }
 };
 
-double calculate_accuracy(const std::vector<int>& predicted_labels, const std::vector<int>& true_labels) {
-    if (predicted_labels.size() != true_labels.size()) {
-        throw std::invalid_argument("Input vectors must have the same size");
-    }
-
-    int correct_count = 0;
-    int total_count = predicted_labels.size();
-
-    for (size_t i = 0; i < total_count; ++i) {
-        if (predicted_labels[i] == true_labels[i]) {
-            correct_count++;
-        }
-    }
-
-    return static_cast<double>(correct_count) / total_count;
-}
-
-double calculate_rmse(const NestedVector& predicted_values, const NestedVector& true_values) {
-    if (predicted_values.size() != true_values.size()) {
-        throw std::invalid_argument("Input vectors must have the same size");
-    }
-
-    double sum_squared_error = 0.0;
-    int total_count = predicted_values.size();
-
-    for (size_t i = 0; i < total_count; ++i) {
-        for (size_t j = 0; j < predicted_values[i].size(); ++j) {
-            double error = predicted_values[i][j] - true_values[i][j];
-            sum_squared_error += error * error;
-        }
-    }
-
-    double mean_squared_error = sum_squared_error / total_count;
-    double rmse = std::sqrt(mean_squared_error);
-
-    return rmse;
-}
 
 
 int main() 
 {
-    NestedVector x_train_regression = {
-        {1.0, 2.0, 3.0},
-        {2.0, 3.0, 4.0},
-        {3.0, 4.0, 5.0},
-        {4.0, 5.0, 6.0},
-        {5.0, 6.0, 7.0}
-    };
-
-    NestedVector y_train_regression = {
-        {4.0},
-        {7.0},
-        {10.0},
-        {13.0},
-        {16.0}
-    };
-
-    Model regression_model;
-    regression_model.add(new InputLayer());
-    regression_model.add(new DenseLayer(3, 5, RELU, DenseLayer::XAVIER_UNIFORM));
-    regression_model.add(new DenseLayer(5, 1, LINEAR, DenseLayer::XAVIER_UNIFORM));
-
-    // Train the model on regression problem
-    regression_model.fit(x_train_regression, y_train_regression, 1000, 0.01);
-
-    // Test Case 2: Calculate RMSE for Regression
-    NestedVector x_test_regression = x_train_regression;
-    NestedVector predicted_values_regression = regression_model.predict(x_test_regression);
-
-    for(const auto &sample : predicted_values_regression) {
-        for(const auto &val : sample) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    double rmse_regression = calculate_rmse(predicted_values_regression, y_train_regression);
-
-    std::cout << "RMSE for Regression: " << rmse_regression << std::endl;
-
     return 0;
 }
