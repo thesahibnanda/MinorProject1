@@ -496,6 +496,37 @@ public:
     }
 };
 
+double calculateRMSE(const NestedVector& y_pred, const NestedVector& y_test) {
+    double total_error = 0.0;
+    int num_samples = y_pred.size();
+
+    for (int i = 0; i < num_samples; ++i) {
+        for (size_t j = 0; j < y_pred[i].size(); ++j) {
+            double error = y_test[i][j] - y_pred[i][j];
+            total_error += error * error;
+        }
+    }
+
+    return sqrt(total_error / num_samples);
+}
+
+double calculateAccuracy(const NestedVector& y_pred, const NestedVector& y_test) {
+    int correct_predictions = 0;
+    int num_samples = y_pred.size();
+
+    for (int i = 0; i < num_samples; ++i) {
+        // Assuming binary classification with a threshold of 0.5
+        // For multi-class classification, you'll need a different approach
+        int predicted_class = y_pred[i][0] >= 0.5 ? 1 : 0;
+        int actual_class = y_test[i][0] >= 0.5 ? 1 : 0;
+        if (predicted_class == actual_class) {
+            correct_predictions++;
+        }
+    }
+
+    return static_cast<double>(correct_predictions) / num_samples;
+}
+
 
 int main() {
     // 2D Inputs Test Case
@@ -512,8 +543,8 @@ int main() {
 
     Model model2D;
     model2D.add(new InputLayer());
-    model2D.add(new DenseLayer(2, 64, RELU, DenseLayer::XAVIER_UNIFORM));
-    model2D.add(new DenseLayer(64, 256, RELU, DenseLayer::XAVIER_UNIFORM));
+    model2D.add(new DenseLayer(2, 128, RELU, DenseLayer::XAVIER_UNIFORM));
+    model2D.add(new DenseLayer(128, 256, RELU, DenseLayer::XAVIER_UNIFORM));
     model2D.add(new DenseLayer(256, 1, SIGMOID, DenseLayer::XAVIER_UNIFORM));
     NestedVector x_test_2d = sampleInputs2D;
 
@@ -531,7 +562,7 @@ int main() {
 
     NestedVector y_pred_2d = model2D.predict(x_test_2d);
 
-    std::cout << "Prediction Results for 2D Input:" << std::endl;
+    std::cout << "\nPrediction Results for 2D Input:" << std::endl;
     for (const auto &sample : y_pred_2d) {
         for (const auto &val : sample) {
             std::cout << val << " ";
@@ -544,6 +575,8 @@ int main() {
     {
         std::cout<<i<<std::endl;
     }
+
+    std::cout<<"\nAccuracy: "<<calculateAccuracy(y_pred_2d, Out)*100<<"%";
 
     return 0;
 }
